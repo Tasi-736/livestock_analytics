@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173b32">
+  <title>LivestockLens | Production Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true">LL</div>
+        <div>
+          <div class="brand-name">LivestockLens</div>
+          <div class="brand-subtitle">PH production analytics</div>
+        </div>
+      </div>
+
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-item active" data-page="overview"><span class="nav-icon">◫</span>Overview</button>
+        <button class="nav-item" data-page="analytics"><span class="nav-icon">⌁</span>Data analytics</button>
+        <button class="nav-item" data-page="models"><span class="nav-icon">▦</span>Model evaluation</button>
+        <button class="nav-item" data-page="predictions"><span class="nav-icon">✳</span>Predictions</button>
+        <button class="nav-item" data-page="records"><span class="nav-icon">▤</span>Data records</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-status-card">
+          <div class="status-heading"><span class="status-dot" id="sidebarStatusDot"></span> Dataset status</div>
+          <div class="status-main" id="sidebarStatusText">Checking data…</div>
+          <div class="status-small" id="sidebarStatusMeta">2010–2025 · Provincial records</div>
+        </div>
+        <div class="sidebar-foot">LOCAL ANALYTICS WORKSPACE<br><span>Livestock production · Philippines</span></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu icon-button" id="mobileMenu" aria-label="Toggle navigation">☰</button>
+          <div>
+            <div class="eyebrow">LIVESTOCK PRODUCTION / 2010–2025</div>
+            <h1 id="pageHeading">Overview</h1>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="data-pill"><span class="live-dot"></span> Local data workspace</span>
+          <button class="button button-light button-small" id="refreshButton">↻ Refresh data</button>
+        </div>
+      </header>
+
+      <div class="global-notice hidden" id="globalNotice" role="status"></div>
+
+      <!-- OVERVIEW -->
+      <section class="page-section active" id="page-overview">
+        <div class="page-intro">
+          <div>
+            <div class="section-kicker">AT A GLANCE</div>
+            <h2>Livestock production overview</h2>
+            <p>Explore provincial production patterns across Carabao, Cattle, Goat, and Hog.</p>
+          </div>
+          <div class="intro-actions">
+            <a class="button button-outline" href="/api/export/cleaned-data.csv">↓ Export cleaned data</a>
+            <button class="button button-primary" data-goto="analytics">Explore analytics <span>→</span></button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <article class="kpi-card">
+            <div class="kpi-top"><span>VALID OBSERVATIONS</span><span class="kpi-icon">▤</span></div>
+            <div class="kpi-value" id="kpiObservations">—</div>
+            <div class="kpi-foot">Province × animal × year records</div>
+          </article>
+          <article class="kpi-card">
+            <div class="kpi-top"><span>PROVINCES / AREAS</span><span class="kpi-icon">⌖</span></div>
+            <div class="kpi-value" id="kpiProvinces">—</div>
+            <div class="kpi-foot">Province-level geographic units</div>
+          </article>
+          <article class="kpi-card">
+            <div class="kpi-top"><span>ANIMAL CATEGORIES</span><span class="kpi-icon">♧</span></div>
+            <div class="kpi-value" id="kpiAnimals">—</div>
+            <div class="kpi-foot">Carabao, Cattle, Goat, Hog</div>
+          </article>
+          <article class="kpi-card kpi-card-accent">
+            <div class="kpi-top"><span>TOTAL PRODUCTION</span><span class="kpi-icon">↗</span></div>
+            <div class="kpi-value" id="kpiProduction">—</div>
+            <div class="kpi-foot">Metric tons · all available records</div>
+          </article>
+        </div>
+
+        <div class="content-grid overview-grid">
+          <article class="panel panel-large">
+            <div class="panel-heading">
+              <div><div class="section-kicker">PRODUCTION MIX</div><h3>Share by animal type</h3></div>
+              <span class="panel-note">2010–2025 total</span>
+            </div>
+            <div class="chart-wrap chart-wrap-medium"><canvas id="overviewShareChart"></canvas></div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading">
+              <div><div class="section-kicker">DATA PROFILE</div><h3>Dataset details</h3></div>
+            </div>
+            <div class="profile-list">
+              <div class="profile-row"><span>Coverage period</span><strong>2010–2025</strong></div>
+              <div class="profile-row"><span>Latest available year</span><strong id="profileLatestYear">—</strong></div>
+              <div class="profile-row"><span>Measurement unit</span><strong>Metric tons</strong></div>
+              <div class="profile-row"><span>Classification target</span><strong>High / Low</strong></div>
+              <div class="profile-row"><span>Source file</span><strong class="profile-source" id="profileSource">Not loaded</strong></div>
+            </div>
+            <div class="profile-footnote">National, regional, and city-level totals are excluded from the provincial analysis, following the supplied notebook.</div>
+          </article>
+        </div>
+
+        <article class="panel source-panel" id="sourcePanel">
+          <div class="source-panel-copy">
+            <div class="section-kicker">DATA SOURCE</div>
+            <h3>Load the livestock dataset</h3>
+            <p>Upload the GitHub repository ZIP or the original <code>.csv.arff</code> file. ZIP archives are read directly, so you do not need to extract them first.</p>
+            <div class="source-links">
+              <a href="https://github.com/Tasi-736/Livestock-Annual-Volume-of-Production-by-Animal-Type-and-Province-for-2010-2025/archive/refs/heads/main.zip" target="_blank" rel="noopener">Open GitHub dataset ZIP ↗</a>
+              <span>·</span>
+              <a href="https://openstat.psa.gov.ph/Metadata/Agriculture-Forestry-Fisheries/Livestock-and-Poultry" target="_blank" rel="noopener">PSA OpenSTAT metadata ↗</a>
+            </div>
+          </div>
+          <form id="uploadForm" class="upload-box">
+            <label class="file-picker" for="datasetFile"><span class="upload-symbol">↑</span><span><strong>Choose dataset file</strong><small>ZIP, ARFF, or CSV · up to 100 MB</small></span></label>
+            <input id="datasetFile" name="dataset" type="file" accept=".zip,.arff,.csv" required>
+            <div class="upload-controls"><span id="selectedFileName">No file selected</span><button class="button button-primary button-small" type="submit" id="uploadButton">Upload dataset</button></div>
+            <div class="upload-status" id="uploadStatus" aria-live="polite"></div>
+          </form>
+        </article>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section class="page-section" id="page-analytics">
+        <div class="page-intro compact-intro">
+          <div><div class="section-kicker">DESCRIPTIVE ANALYTICS</div><h2>Understand the production patterns</h2><p>Compare annual totals, animal categories, and province-level production.</p></div>
+          <a class="button button-outline" href="/api/export/cleaned-data.csv">↓ Download cleaned data</a>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-title"><span class="filter-icon">⚙</span><div><strong>Filter analysis</strong><small>Charts and tables respond to these selections</small></div></div>
+          <label>Animal type<select id="animalFilter"><option value="all">All animal types</option></select></label>
+          <label>Province<select id="provinceFilter"><option value="all">All provinces</option></select></label>
+          <label>Year<select id="yearFilter"><option value="all">All years</option></select></label>
+          <button class="button button-light button-small" id="resetFilters">Reset</button>
+        </div>
+        <div class="analytics-summary" id="analyticsSummary">
+          <div><span>FILTERED OBSERVATIONS</span><strong id="filteredRecords">—</strong></div>
+          <div><span>FILTERED PRODUCTION</span><strong id="filteredProduction">—</strong></div>
+          <div><span>MEDIAN PRODUCTION</span><strong id="filteredMedian">—</strong></div>
+          <div><span>YEAR COVERAGE</span><strong id="filteredCoverage">—</strong></div>
+        </div>
+        <div class="content-grid">
+          <article class="panel panel-large"><div class="panel-heading"><div><div class="section-kicker">YEARLY MOVEMENT</div><h3>Annual production trend</h3></div><span class="panel-note">Summed province records · metric tons</span></div><div class="chart-wrap"><canvas id="trendChart"></canvas></div></article>
+          <article class="panel"><div class="panel-heading"><div><div class="section-kicker">PRODUCTION SHARE</div><h3>Animal category contribution</h3></div></div><div class="chart-wrap chart-wrap-medium"><canvas id="animalShareChart"></canvas></div></article>
+          <article class="panel panel-large"><div class="panel-heading"><div><div class="section-kicker">GEOGRAPHIC COMPARISON</div><h3>Top 10 producing provinces</h3></div><span class="panel-note" id="topProvinceCaption">Latest available year</span></div><div class="chart-wrap chart-wrap-tall"><canvas id="provinceChart"></canvas></div></article>
+          <article class="panel"><div class="panel-heading"><div><div class="section-kicker">2025 DISTRIBUTION</div><h3>Production by animal type</h3></div></div><div class="chart-wrap chart-wrap-medium"><canvas id="distributionChart"></canvas></div></article>
+        </div>
+        <article class="panel table-panel"><div class="panel-heading"><div><div class="section-kicker">DESCRIPTIVE STATISTICS</div><h3>Statistical summary</h3></div><span class="panel-note">Based on selected records</span></div><div class="table-scroll"><table><thead><tr><th>Animal type</th><th>Count</th><th>Mean</th><th>Median</th><th>Std. deviation</th><th>Minimum</th><th>Maximum</th></tr></thead><tbody id="descriptiveTable"><tr><td colspan="7" class="empty-cell">Load a dataset to view statistics.</td></tr></tbody></table></div></article>
+      </section>
+
+      <!-- MODELS -->
+      <section class="page-section" id="page-models">
+        <div class="page-intro compact-intro">
+          <div><div class="section-kicker">PREDICTIVE ANALYTICS</div><h2>Classification model evaluation</h2><p>Evaluate four algorithms using a held-out test set and compare their results.</p></div>
+          <button class="button button-primary" id="trainModelsButton">▶ Train four models</button>
+        </div>
+        <div class="method-note">
+          <div class="method-icon">i</div>
+          <div><strong>How the classification works</strong><p>Production is labelled High when it is at or above the median of the cleaned provincial records, and Low otherwise. The split is 64% training, 16% validation, and 20% final testing. SMOTENC is attempted only when a model's validation accuracy is below 80%, and synthetic rows are retained only when validation accuracy improves.</p></div>
+        </div>
+        <div class="training-status panel" id="trainingStatus">
+          <div class="training-status-icon">◎</div><div><strong id="trainingStatusTitle">Models have not been trained</strong><p id="trainingStatusText">Load the dataset, then run the four classification models. Training can take a little time depending on your computer.</p></div>
+          <div class="training-status-action"><span class="model-status-tag" id="modelStatusTag">NOT TRAINED</span></div>
+        </div>
+        <div class="analytics-summary model-summary hidden" id="modelSummary">
+          <div><span>MEDIAN CLASS THRESHOLD</span><strong id="modelMedian">—</strong></div>
+          <div><span>TRAINING RECORDS</span><strong id="modelTrainCount">—</strong></div>
+          <div><span>VALIDATION RECORDS</span><strong id="modelValidationCount">—</strong></div>
+          <div><span>FINAL TEST RECORDS</span><strong id="modelTestCount">—</strong></div>
+        </div>
+        <div class="content-grid model-chart-grid">
+          <article class="panel panel-large"><div class="panel-heading"><div><div class="section-kicker">MODEL COMPARISON</div><h3>Performance metrics</h3></div><span class="panel-note">Higher is better · 0 to 1</span></div><div class="chart-wrap"><canvas id="modelComparisonChart"></canvas></div></article>
+          <article class="panel"><div class="panel-heading"><div><div class="section-kicker">CLASS BALANCE</div><h3>Low vs. High records</h3></div></div><div class="chart-wrap chart-wrap-medium"><canvas id="classDistributionChart"></canvas></div></article>
+        </div>
+        <article class="panel table-panel"><div class="panel-heading"><div><div class="section-kicker">TEST SET RESULTS</div><h3>Model comparison table</h3></div><a class="text-link" href="/api/export/model-comparison.csv">Export results ↓</a></div><div class="table-scroll"><table><thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1-score</th><th>ROC-AUC</th><th>Augmentation</th></tr></thead><tbody id="modelMetricsTable"><tr><td colspan="7" class="empty-cell">Train the models to display the comparison.</td></tr></tbody></table></div></article>
+        <article class="panel table-panel"><div class="panel-heading"><div><div class="section-kicker">TRAINING AUDIT</div><h3>Conditional augmentation log</h3></div><span class="panel-note">Training data only</span></div><div class="table-scroll"><table><thead><tr><th>Model</th><th>Validation before</th><th>Triggered?</th><th>Rows before</th><th>Synthetic rows</th><th>Validation after</th><th>Selected?</th><th>Decision</th></tr></thead><tbody id="augmentationTable"><tr><td colspan="8" class="empty-cell">The audit log will appear after training.</td></tr></tbody></table></div><p class="table-footnote">Synthetic records are generated only from training data. They are not additional official livestock observations.</p></article>
+        <div class="content-grid">
+          <article class="panel panel-large"><div class="panel-heading"><div><div class="section-kicker">DISCRIMINATION</div><h3>ROC curves</h3></div><span class="panel-note">False positive rate vs. true positive rate</span></div><div class="chart-wrap"><canvas id="rocChart"></canvas></div></article>
+          <article class="panel"><div class="panel-heading"><div><div class="section-kicker">INTERPRETATION</div><h3>ROC-AUC guide</h3></div></div><div class="guide-list"><div><strong>0.50</strong><span>Near chance-level ranking</span></div><div><strong>0.70–0.80</strong><span>Moderate discrimination</span></div><div><strong>0.80–0.90</strong><span>Good discrimination</span></div><div><strong>Closer to 1.00</strong><span>Better class separation</span></div></div></article>
+        </div>
+        <article class="panel"><div class="panel-heading"><div><div class="section-kicker">ERROR ANALYSIS</div><h3>Confusion matrices</h3></div><span class="panel-note">Actual vs. predicted classes on the test set</span></div><div class="confusion-grid" id="confusionGrid"><div class="empty-cell">Train models to display their confusion matrices.</div></div></article>
+      </section>
+
+      <!-- PREDICTIONS -->
+      <section class="page-section" id="page-predictions">
+        <div class="page-intro compact-intro"><div><div class="section-kicker">MODEL INFERENCE</div><h2>Predict a production category</h2><p>Estimate whether a province and animal combination is classified as High or Low production for a selected year.</p></div><a class="button button-outline" href="/api/export/predictions-2026.csv">↓ Export 2026 predictions</a></div>
+        <div class="prediction-layout">
+          <article class="panel prediction-form-panel">
+            <div class="panel-heading"><div><div class="section-kicker">PREDICTION INPUT</div><h3>Choose the record</h3></div><span class="prediction-chip">4 classifiers</span></div>
+            <form id="predictionForm" class="prediction-form">
+              <label>Animal type<select id="predictionAnimal" required><option value="">Select animal type</option></select></label>
+              <label>Province<select id="predictionProvince" required><option value="">Select province</option></select></label>
+              <label>Prediction year<input id="predictionYear" type="number" min="2010" max="2100" value="2026" required></label>
+              <button class="button button-primary button-full" type="submit" id="predictButton">Generate prediction <span>→</span></button>
+            </form>
+            <div class="prediction-helper">Predictions are based on the model's training patterns and a High/Low threshold calculated from the historical median. They are not forecasts of an exact production volume.</div>
+          </article>
+          <article class="panel prediction-result-panel" id="predictionResult">
+            <div class="prediction-placeholder"><div class="placeholder-orbit">✳</div><h3>Your result will appear here</h3><p>Train the models, choose an animal and province, then generate a prediction.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- RECORDS -->
+      <section class="page-section" id="page-records">
+        <div class="page-intro compact-intro"><div><div class="section-kicker">CLEANED DATASET</div><h2>Provincial production records</h2><p>Review the cleaned long-format dataset used by the charts and classification models.</p></div><a class="button button-outline" href="/api/export/cleaned-data.csv">↓ Export all records</a></div>
+        <article class="panel table-panel records-panel">
+          <div class="records-toolbar"><div><h3>Data preview</h3><span id="recordsCount">— records</span></div><div class="records-search"><input id="recordsSearch" type="search" placeholder="Search province, animal, or year…"><button class="button button-light button-small" id="recordsSearchButton">Search</button></div></div>
+          <div class="table-scroll"><table><thead><tr><th>Year</th><th>Animal type</th><th>Province</th><th class="align-right">Production (metric tons)</th></tr></thead><tbody id="recordsTable"><tr><td colspan="4" class="empty-cell">Load a dataset to view records.</td></tr></tbody></table></div>
+          <div class="pagination"><span id="paginationInfo">Page 0 of 0</span><div><button class="button button-light button-small" id="prevPage">← Previous</button><button class="button button-light button-small" id="nextPage">Next →</button></div></div>
+        </article>
+      </section>
+
+      <footer class="app-footer"><span>LivestockLens · Academic analytics project</span><span>Data scope: provincial annual volume, 2010–2025</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
