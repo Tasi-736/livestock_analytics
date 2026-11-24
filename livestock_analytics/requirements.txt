@@ -1,0 +1,10 @@
+# Streamlit dashboard and interactive charts
+streamlit>=1.40,<2.0
+plotly>=5.20,<7.0
+
+# Existing Flask backend is reused for data cleaning and ML training
+Flask>=3.0,<4.0
+pandas>=2.0,<3.0
+numpy>=1.24,<3.0
+scikit-learn>=1.3,<2.0
+imbalanced-learn>=0.12,<1.0
